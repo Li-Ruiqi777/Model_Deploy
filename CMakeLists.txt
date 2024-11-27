@@ -66,3 +66,4 @@ print_var(ALL_LIB_DIRS)
 # 添加子目录
 add_subdirectory(yolo)
 add_subdirectory(zero-dce)
+add_subdirectory(concurrency_infer)

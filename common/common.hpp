@@ -111,3 +111,68 @@ struct PreParam
     float height = 0;
     float width = 0;
 };
+
+struct infer_context
+{
+    infer_context(nvinfer1::ICudaEngine *engine, const cv::Mat &img)
+        : num_inputs(0), num_outputs(0)
+    {
+        cudaStreamCreate(&this->stream);
+        this->execution_context = engine->createExecutionContext();
+        auto num_bindings = engine->getNbBindings();
+        for (int i = 0; i < num_bindings; ++i)
+        {
+            Binding binding;
+            nvinfer1::Dims dims;
+
+            nvinfer1::DataType dtype = engine->getBindingDataType(i);
+            std::string name = engine->getBindingName(i);
+
+            binding.name = name;
+            binding.dsize = type_to_size(dtype);
+
+            bool IsInput = engine->bindingIsInput(i);
+
+            if (IsInput)
+            {
+                this->num_inputs += 1;
+
+                // 修改推理上下文中输入的Dim
+                dims = nvinfer1::Dims4(1, 3, img.rows, img.cols);
+                this->execution_context->setBindingDimensions(i, dims);
+
+                binding.size = get_size_by_dims(dims);
+                binding.dims = dims;
+                this->input_bindings.push_back(binding);
+            }
+            else
+            {
+                this->num_outputs += 1;
+                dims = this->execution_context->getBindingDimensions(i);
+                binding.size = get_size_by_dims(dims);
+                binding.dims = dims;
+                this->output_bindings.push_back(binding);
+            }
+        }
+    }
+    ~infer_context()
+    {
+        cudaStreamDestroy(this->stream);
+        for (auto &ptr : this->buffers)
+        {
+            CHECK(cudaFree(ptr));
+        }
+        this->execution_context->destroy();
+    }
+
+    infer_context(const infer_context &) = delete;
+    infer_context &operator=(const infer_context &) = delete;
+
+    int num_inputs;
+    int num_outputs;
+    std::vector<Binding> input_bindings;
+    std::vector<Binding> output_bindings;
+    std::vector<void *> buffers;
+    nvinfer1::IExecutionContext* execution_context;
+    cudaStream_t stream;
+};

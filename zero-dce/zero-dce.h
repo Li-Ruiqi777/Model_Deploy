@@ -7,6 +7,9 @@ class ZeroDCE
 public:
     explicit ZeroDCE(const std::string &engine_file_path);
     ~ZeroDCE();
+    ZeroDCE() = delete;
+    ZeroDCE(const ZeroDCE &) = delete;
+    ZeroDCE &operator=(const ZeroDCE &) = delete;
 
     void make_pipe(bool warmup = true);
     void copy_from_Mat(const cv::Mat &image);
@@ -23,7 +26,7 @@ public:
     std::vector<void *> device_ptrs;
 
 private:
-    const cv::Size input_size = cv::Size(2048, 1024); //WH
+    const cv::Size input_size = cv::Size(2048, 1024); // WH
     nvinfer1::ICudaEngine *engine = nullptr;
     nvinfer1::IRuntime *runtime = nullptr;
     nvinfer1::IExecutionContext *context = nullptr;
