@@ -12,6 +12,7 @@ YOLOv8::YOLOv8(const std::string &engine_file_path)
     assert(trtModelStream);
     file.read(trtModelStream, size);
     file.close();
+
     initLibNvInferPlugins(&this->gLogger, "");
     this->runtime = nvinfer1::createInferRuntime(this->gLogger);
     assert(this->runtime != nullptr);
@@ -19,9 +20,10 @@ YOLOv8::YOLOv8(const std::string &engine_file_path)
     this->engine = this->runtime->deserializeCudaEngine(trtModelStream, size);
     assert(this->engine != nullptr);
     delete[] trtModelStream;
-    this->context = this->engine->createExecutionContext();
 
+    this->context = this->engine->createExecutionContext();
     assert(this->context != nullptr);
+
     cudaStreamCreate(&this->stream);
 
 #ifdef TRT_10
@@ -158,7 +160,6 @@ void YOLOv8::letterbox(const cv::Mat &image, cv::Mat &out, cv::Size &size)
     float height = image.rows;
     float width = image.cols;
 
-    // float r    = std::min(inp_h / height, inp_w / width);
     float r = MIN(inp_h / height, inp_w / width);
     int padw = std::round(width * r);
     int padh = std::round(height * r);
@@ -362,5 +363,62 @@ void YOLOv8::draw_objects(const cv::Mat &image,
         cv::rectangle(res, cv::Rect(x, y, label_size.width, label_size.height + baseLine), {0, 0, 255}, -1);
 
         cv::putText(res, text, cv::Point(x, y + label_size.height), cv::FONT_HERSHEY_SIMPLEX, 0.4, {255, 255, 255}, 1);
+    }
+}
+
+void YOLOv8::process_output(std::vector<Object> &objs, float score_thres, int num_labels)
+{
+    objs.clear();
+    int num_channels = this->output_bindings[0].dims.d[1];
+    int num_anchors = this->output_bindings[0].dims.d[2];
+
+    auto &dw = this->pparam.dw;
+    auto &dh = this->pparam.dh;
+    auto &width = this->pparam.width;
+    auto &height = this->pparam.height;
+    auto &ratio = this->pparam.ratio;
+
+    std::vector<cv::Rect> bboxes;
+    std::vector<float> scores;
+    std::vector<int> labels;
+    std::vector<int> indices;
+
+    cv::Mat output = cv::Mat(num_channels, num_anchors, CV_32F, static_cast<float *>(this->host_ptrs[0]));
+    output = output.t();
+    for (int i = 0; i < num_anchors; i++)
+    {
+        auto row_ptr = output.row(i).ptr<float>();
+        auto bboxes_ptr = row_ptr;
+        auto scores_ptr = row_ptr + 4;
+        auto max_s_ptr = std::max_element(scores_ptr, scores_ptr + num_labels);
+        float score = *max_s_ptr;
+        if (score > score_thres)
+        {
+            float x = *bboxes_ptr++ - dw;
+            float y = *bboxes_ptr++ - dh;
+            float w = *bboxes_ptr++;
+            float h = *bboxes_ptr;
+
+            float x0 = clamp((x - 0.5f * w) * ratio, 0.f, width);
+            float y0 = clamp((y - 0.5f * h) * ratio, 0.f, height);
+            float x1 = clamp((x + 0.5f * w) * ratio, 0.f, width);
+            float y1 = clamp((y + 0.5f * h) * ratio, 0.f, height);
+
+            int label = max_s_ptr - scores_ptr;
+            cv::Rect_<float> bbox;
+            bbox.x = x0;
+            bbox.y = y0;
+            bbox.width = x1 - x0;
+            bbox.height = y1 - y0;
+
+            bboxes.push_back(bbox);
+            labels.push_back(label);
+            scores.push_back(score);
+        }
+    }
+
+    for (int i = 0; i < bboxes.size(); ++i)
+    {
+        objs.emplace_back(bboxes[i], labels[i], scores[i]);
     }
 }

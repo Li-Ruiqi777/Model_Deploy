@@ -101,6 +101,9 @@ struct Object
     cv::Rect_<float> rect;
     int label = 0;
     float prob = 0.0;
+    Object()=default;
+    Object(const cv::Rect_<float>& r, int l, float p)
+        : rect(r), label(l), prob(p) {}
 };
 
 struct PreParam
