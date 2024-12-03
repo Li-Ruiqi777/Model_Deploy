@@ -22,7 +22,10 @@ public:
      */
     cv::Mat predict(const cv::Mat &image, std::vector<Object> &results,
                     const float score_thres = 0.25f, const float iou_thres = 0.65f,
-                    const int topk = 10, const int num_labels = 1);
+                    const int topk = 30, const int num_labels = 5);
+
+    static std::vector<std::string> CLASS_NAMES;
+    static std::vector<std::vector<unsigned int>> COLORS;
 
 private:
     cv::Mat forward_with_sahi(const cv::Mat &image, std::vector<Object> &results,
@@ -42,19 +45,5 @@ private:
     float overlap_width_ratio = 0;
 
     const cv::Size input_size = cv::Size(1024, 1024);
-    const std::vector<std::string> CLASS_NAMES = {
-        "broken",
-        "warp",
-        "scatter",
-        "rust",
-        "wear",
-    };
-    const std::vector<std::vector<unsigned int>> COLORS = {
-        {255, 0, 0},
-        {0, 255, 0},
-        {0, 0, 255},
-        {255, 255, 0},
-        {255, 255, 0},
-    };
-    const std::string engine_file_path = "E:/DeepLearning/yolo-utils/runs/detect/train2/weights/yolov8n-rope.engine";
+    const std::string engine_file_path = "E:/DeepLearning/Model_Deploy/model/yolo11n-rope.engine";
 };

@@ -1,5 +1,19 @@
-
 #include "detect_service.h"
+
+std::vector<std::string> DetectService::CLASS_NAMES = {
+    "broken",
+    "warp",
+    "scatter",
+    "rust",
+    "wear",
+};
+std::vector<std::vector<unsigned int>> DetectService::COLORS = {
+    {255, 0, 0},
+    {0, 255, 0},
+    {0, 0, 255},
+    {255, 255, 0},
+    {255, 255, 0},
+};
 
 DetectService::DetectService(bool useSAHI_) : useSAHI(useSAHI_)
 {

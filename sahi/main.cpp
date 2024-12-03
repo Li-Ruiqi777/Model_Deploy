@@ -2,8 +2,8 @@
 
 #include "sahi.h"
 
-const std::string MODEL_PATH = "E:/DeepLearning/yolo-utils/runs/detect/train2/weights/yolov8n-rope.engine";
-const std::string IMG_PATH = "E:/DeepLearning/0_DataSets/006-rope/002-rope2/JPEGImages/001089.jpg";
+const std::string MODEL_PATH = "E:/DeepLearning/Model_Deploy/model/yolo11n-rope.engine";
+const std::string IMG_PATH = "E:/DeepLearning/Model_Deploy/3.png";
 const std::vector<std::string> CLASS_NAMES = {
     "broken",
     "warp",
@@ -48,6 +48,26 @@ void test_Slice(int slice_height, int slice_width,
     cv::waitKey(0);
 }
 
+void test_Slice2(int slice_height, int slice_width,
+                 float overlap_height_ratio, float overlap_width_ratio)
+{
+    cv::Mat img = cv::imread(IMG_PATH);
+    SAHI sahi(slice_height, slice_width, overlap_height_ratio, overlap_width_ratio);
+    std::vector<std::pair<cv::Rect, int>> sliceRegions = sahi.calculateSliceRegions(img.rows, img.cols,
+                                                                                    350, 0, 900, 1024);
+
+    // Draw the slice regions
+    for (const auto &region : sliceRegions)
+    {
+        Object box{region.first, 0, 0};
+        cv::Scalar color = cv::Scalar(rand() % 256, rand() % 256, rand() % 256);
+        cv::rectangle(img, box.rect, color, 2);
+    }
+
+    cv::imshow("Slice", img);
+    cv::waitKey(0);
+}
+
 void test_SAHI(int slice_height, int slice_width,
                float overlap_height_ratio, float overlap_width_ratio)
 {
@@ -57,7 +77,8 @@ void test_SAHI(int slice_height, int slice_width,
 
     cv::Mat img = cv::imread(IMG_PATH);
     SAHI sahi(slice_height, slice_width, overlap_height_ratio, overlap_width_ratio);
-    std::vector<std::pair<cv::Rect, int>> sliceRegions = sahi.calculateSliceRegions(img.rows, img.cols);
+    std::vector<std::pair<cv::Rect, int>> sliceRegions = sahi.calculateSliceRegions(img.rows, img.cols,
+                                                                                    350, 0, 900, 1024);
 
     std::vector<Object> allObjects;
 
@@ -65,11 +86,6 @@ void test_SAHI(int slice_height, int slice_width,
     // 切片并推理
     for (const auto &region : sliceRegions)
     {
-        // 只推理x在图片宽度的33~66%的区域
-        int center_x = region.first.x + region.first.width / 2;
-        if (center_x < img.cols * 0.25 || center_x > img.cols * 0.75)
-            continue;
-
         ++infer_times;
 
         cv::Mat slice = img(region.first);
@@ -104,8 +120,6 @@ void test_SAHI(int slice_height, int slice_width,
 
     cv::Mat dst;
     model->draw_objects(img, dst, filteredObjects, CLASS_NAMES, COLORS);
-
-    cv::resize(dst, dst, cv::Size(img.cols / 2, img.rows / 2));
     cv::imshow("dst", dst);
     cv::waitKey(0);
 }
@@ -113,7 +127,8 @@ void test_SAHI(int slice_height, int slice_width,
 int main()
 {
     cv::utils::logging::setLogLevel(cv::utils::logging::LOG_LEVEL_SILENT);
-    test_Detect();
+    // test_Detect();
     // test_Slice(128, 128, 0, 0);
-    // test_SAHI(512, 512, 0, 0);
+    test_Slice2(256, 256, 0, 0);
+    test_SAHI(256, 256, 0, 0);
 }
