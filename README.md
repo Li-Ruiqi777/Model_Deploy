@@ -23,6 +23,85 @@
 
 
 
+## 模型格式转换
+
+### YOLO-Detect
+
+1.onnx
+
+```python
+from ultralytics import YOLO
+model = YOLO("xxx.pt")
+model.export(format="onnx",
+             opset=11, 
+             simplify=True,
+             imgsz=1024,
+             dynamic=False,
+             half=True)
+```
+
+2.engine
+
+```bash
+trtexec --onnx=xxx.onnx --saveEngine=xxx.engine --fp16
+```
+
+
+
+### Zero-DCE
+
+1.onnx（这里将输入张量设置为固定大小，因为测试时发现如果不固定将占用非常大的显存）
+
+```python
+model = enhance_net_nopool()
+model.load_state_dict(
+    torch.load("E:/DeepLearning/Zero-DCE-improved/src/snapshots/pre-train.pth")
+)
+model.eval()
+
+fix_input = torch.randn(1, 3, 1024, 1024)  # 示例输入，调整为所需大小
+torch.onnx.export(
+    model,
+    fix_input,
+    "zero-dce_1024-1024.onnx",
+    input_names=["input"],
+    output_names=["enhance_image_1", "enhance_image", "r"],
+    opset_version=11,
+)
+```
+
+2.engine
+
+```bash
+trtexec --onnx=xxx.onnx --saveEngine=xxx.engine --fp16
+```
+
+
+
+### YOLO-Seg
+
+1.onnx
+
+```python
+from ultralytics import YOLO
+model = YOLO("xxx.pt")
+model.export(format="onnx",
+             opset=11, 
+             simplify=True,
+             imgsz=1024,
+             dynamic=False,
+             half=True)
+```
+
+2.engine
+
+```bash
+trtexec --onnx=xxx.onnx --saveEngine=xxx.engine --fp16
+```
+
+
+
 ## 参考
 
-- [triple-Mu/YOLOv8-TensorRT: YOLOv8 using TensorRT accelerate !](https://github.com/triple-Mu/YOLOv8-TensorRT)
+- [YOLO部署](https://github.com/triple-Mu/YOLOv8-TensorRT)
+- [ZeroDCE权重](https://github.com/Aiemu/Zero-DCE-improved)
