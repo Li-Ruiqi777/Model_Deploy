@@ -189,6 +189,7 @@ cv::Mat ZeroDCE::postprocess()
             }
         }
     }
-    cv::cvtColor(result, result, cv::COLOR_RGB2GRAY);
+    // cv::cvtColor(result, result, cv::COLOR_RGB2GRAY);
+    result.convertTo(result, CV_8UC1, 255.0);
     return result;
 }

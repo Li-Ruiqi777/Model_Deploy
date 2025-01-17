@@ -12,7 +12,7 @@
 
 int main()
 {
-    const std::string engine_file_path = "E:/DeepLearning/Zero-DCE-improved/zero-dce_fixed.engine";
+    const std::string engine_file_path = "E:/DeepLearning/Zero-DCE-improved/zero-dce-fixed.engine";
     const std::string image_path = "E:/DeepLearning/Zero-DCE-improved/src/data/test_data/rope/Image_17.bmp";
 
     ZeroDCE *zeroDCE = new ZeroDCE(engine_file_path);

@@ -26,7 +26,7 @@ public:
     std::vector<void *> device_ptrs;
 
 private:
-    const cv::Size input_size = cv::Size(2048, 1024); // WH
+    const cv::Size input_size = cv::Size(1024, 1024); // WH
     nvinfer1::ICudaEngine *engine = nullptr;
     nvinfer1::IRuntime *runtime = nullptr;
     nvinfer1::IExecutionContext *context = nullptr;

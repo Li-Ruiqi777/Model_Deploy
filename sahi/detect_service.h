@@ -21,7 +21,7 @@ public:
      * @return 绘制了结果的图片
      */
     cv::Mat predict(const cv::Mat &image, std::vector<Object> &results,
-                    const float score_thres = 0.25f, const float iou_thres = 0.65f,
+                    const float score_thres = 0.10f, const float iou_thres = 0.65f,
                     const int topk = 30, const int num_labels = 5);
 
     static std::vector<std::string> CLASS_NAMES;
