@@ -36,6 +36,10 @@ if (TensorRT_VERSION_MAJOR GREATER_EQUAL 10)
     add_definitions(-DTRT_10)
 endif ()
 
+# Eigen
+list(APPEND CMAKE_PREFIX_PATH "F:/ThirdPart/Eigen3" ${CMAKE_PREFIX_PATH})
+find_package(Eigen3 REQUIRED)
+
 set(CommonDir ${CMAKE_SOURCE_DIR}/common)
 
 list(APPEND ALL_INCLUDE_DIRS
@@ -50,6 +54,7 @@ list(APPEND ALL_LIBS
         ${CUDA_LIBRARIES}
         ${OpenCV_LIBRARIES}
         ${TensorRT_LIBRARIES}
+        Eigen3::Eigen
 )
 
 list(APPEND ALL_LIB_DIRS
@@ -68,3 +73,5 @@ add_subdirectory(yolo)
 add_subdirectory(zero-dce)
 add_subdirectory(concurrency_infer)
 add_subdirectory(sahi)
+# add_subdirectory(yolo-seg)
+add_subdirectory(yolo-bytetrack)
